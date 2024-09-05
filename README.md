@@ -37,7 +37,7 @@ docker pull yunseokim/dl-env:rapids-cuda12.4.1-cudnn9.1.0-ubuntu22.04
 ### Build manually
 After downloading the desired Dockerfile from this repository, you can build the image yourself by running the following command from the path where the Dockerfile is located.
 ```bash
-docker build -t yunseokim/dl-env:<tag> -f ./Dockerfile . \
+docker build -t dl-env:<tag> -f ./Dockerfile . \
 --build-arg USER_PASSWORD=<password>
 ```
 Enter the tag of your choice in the \<tag\> field, and in the \<password\> field, enter the login password to be used when remotely login to the 'remote' account with SSH.
