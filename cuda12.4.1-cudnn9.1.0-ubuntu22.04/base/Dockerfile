@@ -1,23 +1,26 @@
 FROM nvidia/cuda:12.4.1-cudnn-devel-ubuntu22.04
-LABEL maintainer="contact@yunseo.kim"
-LABEL version="1.1"
-LABEL description="Dockerfiles for building a basic deep learning development environment, which includes CUDA&cuDNN only."
+LABEL kim.yunseo.maintainer="Yunseo Kim (contact@yunseo.kim)"
+LABEL kim.yunseo.version="1.1"
+LABEL kim.yunseo.release-date="2025-02-16"
+LABEL description="Dockerfiles for building a basic deep learning development environment, which includes CUDA & cuDNN, OpenSSH Server and tmux only."
 
 # 1. install basic utilities and Python-related packages, sudo, and SSH server
-RUN apt-get update -y && apt-get install -y --no-install-recommends\
+RUN apt-get update -y && apt-get install -y --no-install-recommends \
     apt-utils \
-    sudo \
-    ssh \
     curl \
+    gosu \
     openssh-server \
-    tmux \
     python3 \
     python-is-python3 \
-    python3-pip && \
-    rm -rf /var/lib/apt/lists/*
+    python3-pip \
+    ssh \
+    tmux \
+    && rm -rf /var/lib/apt/lists/* \
+# verify that the binary works
+    gosu nobody true
     
 # 2. Set up time zone
-ARG TZ="Asia/Seoul"
+ARG TZ="Asia/Seoul"  # If necessary, replace it with a value that works for you.
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # 3. Set up SSH server
@@ -26,28 +29,39 @@ RUN echo "PermitRootLogin no" >> /etc/ssh/sshd_config && \
     echo "PasswordAuthentication yes" >> /etc/ssh/sshd_config
 
 # 4. Create remote user (password can be passed to --build-arg at build time)
+#
+# This default password is very weak. Make sure to change it to your own unique
+# password string!
+#
+# This Dockerfile assumes that the built image will only be used by yourself or
+# a small group of trusted insiders, and if you need to distribute the image
+# without exposing sensitive information, using --build-arg is dangerous.
+# See the official Docker documentation.
 ARG USER_NAME="remote"
 ARG USER_PASSWORD="000000"
-RUN useradd --create-home --shell /bin/bash $USER_NAME && \
-    echo "$USER_NAME:$USER_PASSWORD" | chpasswd && \
-    adduser $USER_NAME sudo
+ARG HOME_DIR="/home/$USER_NAME"
+RUN useradd --create-home --home-dir $HOME_DIR --shell /bin/bash $USER_NAME \
+    && echo "$USER_NAME:$USER_PASSWORD" | chpasswd
 
 # 5. Switch to remote user
+ENV USER_NAME="$USER_NAME"
 USER $USER_NAME
-ENV HOME=/home/$USER_NAME
-WORKDIR $HOME
+WORKDIR $HOME_DIR
 
 # 6. Install pip
 RUN python3 -m pip install -U setuptools pip
-ENV PATH="$HOME/.local/bin:$PATH"
+ENV PATH="$HOME_DIR/.local/bin:$PATH"
 
 # 7. Create a workspace directory to locate jupyter notebooks and .py files
-RUN mkdir -p $HOME/workspace
+ENV WORK_DIR="$HOME_DIR/workspace"
+RUN mkdir -p $WORK_DIR
 
 # 8. Expose SSH and Jupyter Lab ports
 EXPOSE 22 8888
 
-# 9. Copy the entry point script and grant permission to run it
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+# 9. Switch to root
+USER root
+
+# 10. Copy the entry point script and grant permission to run it
+COPY --chmod=755 entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]

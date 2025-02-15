@@ -1,7 +1,17 @@
 #!/bin/bash
-# Run SSH daemon in the background
-/usr/sbin/sshd
+set -e
 
-# Move to the workspace directory and run Jupyter Lab
-cd "$HOME/workspace"
-exec jupyter lab --no-browser --autoreload --ip=0.0.0.0 --notebook-dir="$HOME/workspace"
+# Run SSH daemon in the background
+service ssh start
+
+# Move to the workspace directory
+# The base image does not come with Jupyter Lab preinstalled.
+cd "$WORK_DIR"
+if [ $# -gt 0 ];then
+    #su ${USER_NAME} -c "exec $@"
+    exec gosu ${USER_NAME} $@
+else
+    #su ${USER_NAME} -c "exec /bin/bash"
+    exec gosu ${USER_NAME} /bin/bash
+fi
+
