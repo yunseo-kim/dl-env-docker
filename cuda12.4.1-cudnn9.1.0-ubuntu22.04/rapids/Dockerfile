@@ -17,7 +17,7 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends \
     tmux \
     && rm -rf /var/lib/apt/lists/* \
 # verify that the binary works
-    gosu nobody true
+    && gosu nobody true
     
 # 2. Set up time zone
 ARG TZ="Asia/Seoul"  # If necessary, replace it with a value that works for you.
