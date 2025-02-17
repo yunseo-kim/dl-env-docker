@@ -4,7 +4,7 @@ LABEL kim.yunseo.version="1.1"
 LABEL kim.yunseo.release-date="2025-02-16"
 LABEL description="Dockerfiles for building a deep learning development environment, which includes the JupyterLab, OpenSSH Server, tmux, Numpy, Scipy, pandas, Matplotlib, Seaborn, scikit-learn, tqdm, PyTorch, Cupy, cuDF, cuML, and DALI."
 
-# 1. install basic utilities and Python-related packages, sudo, and SSH server
+# 1. install basic utilities and Python-related packages, gosu, and SSH server
 RUN apt-get update -y && apt-get install -y --no-install-recommends \
     apt-utils \
     curl \

@@ -4,7 +4,7 @@ LABEL kim.yunseo.version="1.1"
 LABEL kim.yunseo.release-date="2025-02-16"
 LABEL description="Dockerfiles for building a basic deep learning development environment, which includes CUDA & cuDNN, OpenSSH Server and tmux only."
 
-# 1. install basic utilities and Python-related packages, sudo, and SSH server
+# 1. install basic utilities and Python-related packages, gosu, and SSH server
 RUN apt-get update -y && apt-get install -y --no-install-recommends \
     apt-utils \
     curl \
