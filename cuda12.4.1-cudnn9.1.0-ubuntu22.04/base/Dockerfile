@@ -1,7 +1,7 @@
 FROM nvidia/cuda:12.4.1-cudnn-devel-ubuntu22.04
-LABEL kim.yunseo.maintainer="Yunseo Kim <contact@yunseo.kim>"
-LABEL kim.yunseo.version="1.1"
-LABEL kim.yunseo.release-date="2025-02-16"
+LABEL kim.yunseo.maintainer="Yunseo Kim <dev@yunseo.kim>"
+LABEL kim.yunseo.version="1.2"
+LABEL kim.yunseo.release-date="2025-12-18"
 LABEL description="Dockerfiles for building a basic deep learning development environment, which includes CUDA & cuDNN, OpenSSH Server and tmux only."
 
 # 1. install basic utilities and Python-related packages, gosu, and SSH server
@@ -28,27 +28,22 @@ RUN mkdir /var/run/sshd
 RUN echo "PermitRootLogin no" >> /etc/ssh/sshd_config && \
     echo "PasswordAuthentication yes" >> /etc/ssh/sshd_config
 
-# 4. Create remote user (password can be passed to --build-arg at build time)
+# 4. Create remote user
 #
-# This default password is very weak. Make sure to change it to your own unique
-# password string!
-#
-# This Dockerfile assumes that the built image will only be used by yourself or
-# a small group of trusted insiders, and if you need to distribute the image
-# without exposing sensitive information, using --build-arg is dangerous.
-# See the official Docker documentation.
+# The password must be pre-specified at build time with the `DL_ENV_PASSWD`
+# environment variable.
 ARG USER_NAME="remote"
-ARG USER_PASSWORD="000000"
 ARG HOME_DIR="/home/$USER_NAME"
-RUN useradd --create-home --home-dir $HOME_DIR --shell /bin/bash $USER_NAME \
-    && echo "$USER_NAME:$USER_PASSWORD" | chpasswd
+RUN --mount=type=secret,id=USER_PASSWORD \
+    useradd --create-home --home-dir $HOME_DIR --shell /bin/bash $USER_NAME \
+    && awk -v user="$USER_NAME" '{print user ":" $0}' /run/secrets/USER_PASSWORD | chpasswd
 
 # 5. Switch to remote user
 ENV USER_NAME="$USER_NAME"
 USER $USER_NAME
 WORKDIR $HOME_DIR
 
-# 6. Install pip
+# 6. Install setuptools and pip
 RUN python3 -m pip install -U setuptools pip
 ENV PATH="$HOME_DIR/.local/bin:$PATH"
 

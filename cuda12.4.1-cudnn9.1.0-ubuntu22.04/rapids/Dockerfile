@@ -1,8 +1,8 @@
 FROM nvidia/cuda:12.4.1-cudnn-devel-ubuntu22.04
-LABEL kim.yunseo.maintainer="Yunseo Kim <contact@yunseo.kim>"
-LABEL kim.yunseo.version="1.1"
-LABEL kim.yunseo.release-date="2025-02-16"
-LABEL description="Dockerfiles for building a deep learning development environment, which includes the JupyterLab, OpenSSH Server, tmux, Numpy, Scipy, pandas, Matplotlib, Seaborn, scikit-learn, tqdm, PyTorch, Cupy, cuDF, cuML, and DALI."
+LABEL kim.yunseo.maintainer="Yunseo Kim <dev@yunseo.kim>"
+LABEL kim.yunseo.version="1.2"
+LABEL kim.yunseo.release-date="2025-12-18"
+LABEL description="Dockerfiles for building a deep learning development environment, which includes the JupyterLab, OpenSSH Server, tmux, Numpy, Scipy, pandas, Matplotlib, Seaborn, scikit-learn, tqdm, PyTorch, Cupy, RAPIDS packages, and DALI."
 
 # 1. install basic utilities and Python-related packages, gosu, and SSH server
 RUN apt-get update -y && apt-get install -y --no-install-recommends \
@@ -28,48 +28,49 @@ RUN mkdir /var/run/sshd
 RUN echo "PermitRootLogin no" >> /etc/ssh/sshd_config && \
     echo "PasswordAuthentication yes" >> /etc/ssh/sshd_config
 
-# 4. Create remote user (password can be passed to --build-arg at build time)
+# 4. Create remote user
 #
-# This default password is very weak. Make sure to change it to your own unique
-# password string!
-#
-# This Dockerfile assumes that the built image will only be used by yourself or
-# a small group of trusted insiders, and if you need to distribute the image
-# without exposing sensitive information, using --build-arg is dangerous.
-# See the official Docker documentation.
+# The password must be pre-specified at build time with the `DL_ENV_PASSWD`
+# environment variable.
 ARG USER_NAME="remote"
-ARG USER_PASSWORD="000000"
 ARG HOME_DIR="/home/$USER_NAME"
-RUN useradd --create-home --home-dir $HOME_DIR --shell /bin/bash $USER_NAME \
-    && echo "$USER_NAME:$USER_PASSWORD" | chpasswd
+RUN --mount=type=secret,id=USER_PASSWORD \
+    useradd --create-home --home-dir $HOME_DIR --shell /bin/bash $USER_NAME \
+    && awk -v user="$USER_NAME" '{print user ":" $0}' /run/secrets/USER_PASSWORD | chpasswd
 
 # 5. Switch to remote user
 ENV USER_NAME="$USER_NAME"
 USER $USER_NAME
 WORKDIR $HOME_DIR
 
-# 6. Install pip and ml/dl related packages
+# 6. Install setuptools and pip
 RUN python3 -m pip install -U setuptools pip
 ENV PATH="$HOME_DIR/.local/bin:$PATH"
 
+# 7. Install ml/dl related packages
 RUN python3 -m pip install -U \
-        jupyterlab numpy scipy pandas matplotlib seaborn[stats] scikit-learn tqdm \
-    && python3 -m pip install -U torch torchvision torchaudio \
+        jupyterlab numpy scipy pandas matplotlib seaborn[stats] scikit-learn scikit-image tqdm
+RUN python3 -m pip install -U \
         --index-url https://download.pytorch.org/whl/cu124 \
-    && python3 -m pip install -U cupy-cuda12x \
-    && python3 -m pip install -U --extra-index-url=https://pypi.nvidia.com \
-        cudf-cu12==24.8.* cuml-cu12==24.8.* nvidia-dali-cuda120
+        --extra-index-url=https://pypi.org/simple \
+        --extra-index-url=https://pypi.nvidia.com \
+        "torch<=2.6.0" "torchvision<=0.21.0" "torchaudio<=2.6.0" \
+        cupy-cuda12x \
+        "cudf-cu12==25.12.*" "dask-cudf-cu12==25.12.*" "cuml-cu12==25.12.*" \
+        "cugraph-cu12==25.12.*" "nx-cugraph-cu12==25.12.*" "cuxfilter-cu12==25.12.*" \
+        "cucim-cu12==25.12.*" "pylibraft-cu12==25.12.*" "raft-dask-cu12==25.12.*" \
+        "cuvs-cu12==25.12.*" nvidia-dali-cuda120
 
-# 7. Create a workspace directory to locate jupyter notebooks and .py files
+# 8. Create a workspace directory to locate jupyter notebooks and .py files
 ENV WORK_DIR="$HOME_DIR/workspace"
 RUN mkdir -p $WORK_DIR
 
-# 8. Expose SSH and Jupyter Lab ports
+# 9. Expose SSH and Jupyter Lab ports
 EXPOSE 22 8888
 
-# 9. Switch to root
+# 10. Switch to root
 USER root
 
-# 10. Copy the entry point script and grant permission to run it
+# 11. Copy the entry point script and grant permission to run it
 COPY --chmod=755 entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
