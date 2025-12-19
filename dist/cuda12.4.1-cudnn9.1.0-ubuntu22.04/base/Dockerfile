@@ -1,7 +1,7 @@
 FROM nvidia/cuda:12.4.1-cudnn-devel-ubuntu22.04
 LABEL kim.yunseo.maintainer="Yunseo Kim <dev@yunseo.kim>"
-LABEL kim.yunseo.version="1.2"
-LABEL kim.yunseo.release-date="2025-12-18"
+LABEL kim.yunseo.version="2.0"
+LABEL kim.yunseo.release-date="2025-12-19"
 LABEL description="Dockerfiles for building a basic deep learning development environment, which includes CUDA & cuDNN, OpenSSH Server and tmux only."
 
 # 1. install basic utilities and Python-related packages, gosu, and SSH server
