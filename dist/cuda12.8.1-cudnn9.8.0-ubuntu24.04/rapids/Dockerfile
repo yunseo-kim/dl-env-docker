@@ -1,6 +1,6 @@
 FROM nvidia/cuda:12.8.1-cudnn-devel-ubuntu24.04
 LABEL kim.yunseo.maintainer="Yunseo Kim <dev@yunseo.kim>"
-LABEL kim.yunseo.version="1.0.1"
+LABEL kim.yunseo.version="1.0.2"
 LABEL kim.yunseo.release-date="2026-01-06"
 LABEL description="Dockerfiles for building a deep learning development environment, which includes the JupyterLab, OpenSSH Server, tmux, Numpy, Scipy, pandas, Matplotlib, Seaborn, scikit-learn, scikit-image, XGBoost, tqdm, PyTorch, Cupy, RAPIDS packages, and DALI."
 
@@ -45,7 +45,7 @@ RUN --mount=type=secret,id=USER_PASSWORD \
 
 # 5. Switch to remote user
 ENV USER_NAME="$USER_NAME"
-USER $USER_NAME
+USER $USER_UID:$USER_GID
 WORKDIR $HOME_DIR
 
 # 6. Install uv by copying the binary from the official distroless image
