@@ -1,6 +1,6 @@
 FROM nvidia/cuda:12.8.1-cudnn-devel-ubuntu24.04
 LABEL kim.yunseo.maintainer="Yunseo Kim <dev@yunseo.kim>"
-LABEL kim.yunseo.version="1.0"
+LABEL kim.yunseo.version="1.0.1"
 LABEL kim.yunseo.release-date="2026-01-06"
 LABEL description="Dockerfiles for building a deep learning development environment, which includes the JupyterLab, OpenSSH Server, tmux, Numpy, Scipy, pandas, Matplotlib, Seaborn, scikit-learn, scikit-image, XGBoost, tqdm, and PyTorch."
 
@@ -58,16 +58,16 @@ ARG UV_CACHE_DIR="/tmp/uv-cache"
 # 7. Install the latest, managed Python executables
 ARG UV_PYTHON_CACHE_DIR="$UV_CACHE_DIR/python"
 RUN --mount=type=cache,target=$UV_CACHE_DIR,uid=$USER_UID,gid=$USER_GID \
-    uv python install 3.14 --default
+    uv python install 3.13 --default
 
 # 8. Create a virtual environment
 RUN --mount=type=cache,target=$UV_CACHE_DIR,uid=$USER_UID,gid=$USER_GID \
-    uv venv --python 3.14 --seed
+    uv venv --python 3.13 --seed
 # Use the virtual environment automatically
 ENV VIRTUAL_ENV="$HOME_DIR/.venv"
-# Place entry points in the environment at the front of the path & .bashrc
+# Place entry points in the environment at the front of the path & .profile
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
-RUN echo "source $VIRTUAL_ENV/bin/activate" >> $HOME_DIR/.bashrc
+RUN echo "source $VIRTUAL_ENV/bin/activate" >> $HOME_DIR/.profile
 # Allow pip to only run in a virtual environment; exit with an error otherwise
 ENV PIP_REQUIRE_VENV=true
 
