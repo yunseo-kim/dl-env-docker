@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+# Dump environment variables
+printenv | grep _ >> /etc/environment
+
 # Run SSH daemon in the background
 service ssh start
 
@@ -14,4 +17,3 @@ else
     #su ${USER_NAME} -c "exec /bin/bash"
     exec gosu ${USER_NAME} /bin/bash
 fi
-

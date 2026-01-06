@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+# Dump environment variables
+printenv | grep _ >> /etc/environment
+
 # Run SSH daemon in the background
 service ssh start
 
